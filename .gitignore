@@ -1,0 +1,22 @@
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# dbt
+target/
+dbt_packages/
+logs/
+profiles.yml
+
+# Kredensial
+*.json
+.env
+
+# Data mentah (Olist, lisensi CC BY-NC-SA)
+data/
+
+# OS dan editor
+Thumbs.db
+.DS_Store
+.vscode/
