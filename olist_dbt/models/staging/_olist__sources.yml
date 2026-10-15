@@ -1,0 +1,11 @@
+sources:
+  - name: olist
+    schema: olist_raw
+    description: Brazilian E-Commerce Public Dataset by Olist
+    tables:
+      - name: olist_customers_dataset
+        description: One record per customer_id. customer_id is generated per order; 
+                    the same person is identified by customer_unique_id.
+      - name: olist_orders_dataset
+        description: One record per order_id. Links to olist_customers_dataset
+                    via customer_id.
