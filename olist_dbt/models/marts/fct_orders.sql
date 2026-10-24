@@ -5,6 +5,16 @@ with orders as (
 
     select * from {{ ref('int_orders_with_status') }}
 
+),
+
+available as (
+
+    select * from orders 
+
+    {% if var('excluded_status_group', none) is not none %}
+    where status_group != '{{ var("excluded_status_group") }}'
+    {% endif %}
+
 )
 
-select * from orders
+select * from available
