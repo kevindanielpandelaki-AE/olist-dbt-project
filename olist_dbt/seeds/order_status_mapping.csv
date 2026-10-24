@@ -1,0 +1,9 @@
+order_status,status_group
+delivered,completed
+canceled,failed
+unavailable,failed
+shipped,in_progress
+invoiced,in_progress
+processing,in_progress
+created,in_progress
+approved,in_progress

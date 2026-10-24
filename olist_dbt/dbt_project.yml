@@ -36,3 +36,9 @@ models:
       +materialized: view
     marts:
       +materialized: table
+    intermediate:
+      +materialized: ephemeral
+
+vars:
+  excluded_status_group: null
+
