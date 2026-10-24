@@ -39,3 +39,6 @@ models:
     intermediate:
       +materialized: ephemeral
 
+vars:
+  excluded_status_group: null
+
