@@ -1,0 +1,50 @@
+models:
+  - name: fct_orders
+    description: >
+      Fact model for orders from the olist_orders_dataset source.
+      Grain: 1 row = 1 order (order_id is unique).
+      This model is built on top of the stg_orders staging model and includes
+      additional business logic and transformations.
+    columns:
+      - name: order_id
+        description: "Natural key for the order from Olist. Primary key of this table — one order, one row."
+      - name: customer_id
+        description: >
+          Natural key for the customer tied to this specific order in Olist. Note:
+          a new customer_id is generated per order, not per person — a customer who
+          purchases more than once will have a different customer_id each time.
+          The unique identifier per person is customer_unique_id (see stg_customers).
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+      - name: order_status
+        description: "Raw order status from the source system (e.g. delivered, shipped, canceled, etc)."
+        tests:
+          - accepted_values:
+              arguments :
+                values: ['delivered', 'shipped', 'canceled', 'processing', 'unavailable', 'invoiced', 'approved','created']
+      - name: order_purchase_timestamp
+        description: "Timestamp when the order was placed by the customer. Never NULL."
+        tests:
+          - not_null
+      - name: order_approved_at
+        description: "Timestamp when payment for the order was approved. Can be NULL if the order hasn't reached or never reached this stage."
+      - name: order_delivered_carrier_date
+        description: "Timestamp when the order was handed off to the carrier. Can be NULL if the order hasn't reached this stage yet."
+      - name: order_delivered_customer_date
+        description: "Timestamp when the order was received by the customer. Can be NULL if the order hasn't been delivered yet."
+      - name: order_estimated_delivery_date
+        description: "Estimated delivery date shown to the customer at purchase time. Populated since order creation, doesn't change."
+      - name: status_group
+        description: >
+          A derived field that groups the raw order_status values into three categories:
+          completed, in_progress, and failed. This is useful for high-level reporting
+          and analysis of order fulfillment performance.
+        tests:
+          - accepted_values:
+              arguments :
+                values: ['completed', 'in_progress', 'failed']
+      
+               
