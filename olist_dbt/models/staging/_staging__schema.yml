@@ -1,0 +1,57 @@
+models:
+  - name: stg_orders
+    description : >
+      Staging model for orders from the olist_orders_dataset source.
+      Grain: 1 row = 1 order (order_id is unique, 99,441 rows).
+      Rename and light cleaning only from the source — no joins, no business logic.
+    columns:
+      - name: order_id
+        description : "Natural key for the order from Olist. Primary key of this table — one order, one row."
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: >
+          Natural key for the customer tied to this specific order in Olist. Note:
+          a new customer_id is generated per order, not per person — a customer who
+          purchases more than once will have a different customer_id each time.
+          The unique identifier per person is customer_unique_id (see stg_customers).
+      - name: order_status
+        description: "Raw order status from the source system (e.g. delivered, shipped, canceled, etc — 8 valid values)."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['delivered', 'shipped', 'canceled', 'processing', 'unavailable', 'invoiced', 'approved', 'created']
+      - name: order_purchase_timestamp
+        description: "Timestamp when the order was placed by the customer. Never NULL."
+        tests:
+          - not_null
+      - name: order_approved_at
+        description: "Timestamp when payment for the order was approved. Can be NULL if the order hasn't reached or never reached this stage."
+      - name: order_delivered_carrier_date
+        description: "Timestamp when the order was handed off to the carrier. Can be NULL if the order hasn't reached this stage yet."
+      - name: order_delivered_customer_date
+        description: "Timestamp when the order was received by the customer. Can be NULL if the order hasn't been delivered yet."
+      - name: order_estimated_delivery_date
+        description: "Estimated delivery date shown to the customer at purchase time. Populated since order creation, doesn't change."
+  - name: stg_customers
+    description: >
+          Staging model for customers from the olist_customers_dataset source.
+          Grain: 1 row = 1 customer_id — not 1 row per unique person.
+          See customer_unique_id for the identifier per actual person.
+    columns:
+      - name: customer_id
+        description: "Natural key per order-customer relationship in Olist. Not a unique identifier per person — see customer_unique_id."
+        tests:
+          - unique
+          - not_null
+      - name: customer_unique_id
+        description: "Natural key for the customer from Olist. This is the unique identifier per person, unlike customer_id which is generated per order."
+      - name: customer_zip_code_prefix
+        description: "The zip code prefix for the customer's address."
+      - name: customer_city
+        description: "City for the customer's address."
+      - name: customer_state
+        description: "State for the customer's address."
+      
