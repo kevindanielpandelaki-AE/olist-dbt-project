@@ -7,5 +7,14 @@ sources:
         description: One record per customer_id. customer_id is generated per order; 
                     the same person is identified by customer_unique_id.
       - name: olist_orders_dataset
-        description: One record per order_id. Links to olist_customers_dataset
-                    via customer_id.
+        description: >
+          Raw order data from Olist Brazilian E-Commerce dataset (Kaggle, CC BY-NC-SA 4.0).
+          Note: this is a static/historical snapshot (data ends ~Oct 2018), not a live-updating
+          source. Source freshness checks below will always report as stale/error — this is
+          expected, not a pipeline failure. Freshness is configured here to demonstrate
+          understanding of the feature, not because it's operationally meaningful for this dataset.
+        config:
+          loaded_at_field: order_purchase_timestamp
+          freshness:
+            warn_after: {count: 90, period: day}
+            error_after: {count: 180, period: day}
