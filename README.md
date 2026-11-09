@@ -2,7 +2,7 @@
 
 An analytics engineering practice project: transforming the Olist Brazilian e-commerce dataset into clean, tested models with **dbt** on **BigQuery**.
 
-> **Status:** work in progress. Staging, a seed, an intermediate model, and a first mart (`fct_orders`) are in place. Tests, documentation, and the dimensional mart layer are planned next.
+> **Status:** work in progress. Staging, a seed, an intermediate model, a first mart (`fct_orders`) with tests and documentation, and a BigQuery cost-optimization pass (partitioning and clustering) are in place. The dimensional mart layer (staging -> intermediate -> mart refactor) is planned next.
 
 ## Tech stack
 
@@ -61,6 +61,38 @@ dbt run --select fct_orders --vars '{excluded_status_group: "failed"}'
 Note that this filter uses `!=`, so rows with a NULL `status_group` are also excluded when the variable is set.
 
 **Data note.** In Olist, `customer_id` is generated per order, while the same person is identified by `customer_unique_id` (96,096 distinct values). A future customer dimension should use `customer_unique_id` as its natural key.
+
+## BigQuery cost optimization
+
+BigQuery charges on-demand queries by **bytes scanned**, not by execution time. This project explored two techniques to reduce that: partitioning and clustering.
+
+**Partitioning and clustering — tried and validated, not currently live.** `fct_orders` was configured with:
+
+```python
+partition_by={'field': 'order_purchase_timestamp', 'data_type': 'timestamp', 'granularity': 'month'}
+cluster_by=['order_status']
+```
+
+BigQuery confirmed the table was correctly built as `Partitioned by: MONTH` on `order_purchase_timestamp` and `Clustered by: order_status` (verified in the BigQuery console, Table Details tab). However, this configuration is **not active in the current model**, because:
+
+- The BigQuery sandbox enforces a default table expiration of 60 days or less, with no way to disable it without enabling billing.
+- For a time-partitioned table, expiration is calculated from the **partition column's value**, not from when the table was created.
+- Since Olist's order dates are from 2016–2018, every partition is immediately considered "expired" the moment the table is built, wiping all rows.
+
+The validated config is kept as a comment in `models/marts/fct_orders.sql` for reference, and the model currently runs as a plain table (`materialized='table'`). Revisiting this is tracked in the Roadmap below.
+
+**Query cost impact, measured with dry run.** With `fct_orders` as a plain (non-partitioned) table, a filtered query and an unfiltered query over the same table process an identical number of bytes:
+
+| Query | Bytes processed |
+|---|---|
+| `SELECT * FROM fct_orders WHERE order_purchase_timestamp BETWEEN '2018-03-01' AND '2018-03-31' AND order_status = 'delivered'` | 12.29 MB |
+| `SELECT * FROM fct_orders` (no filter) | 12.29 MB |
+
+This confirms a key BigQuery principle: a `WHERE` clause only reduces bytes scanned (and therefore cost) when the table is partitioned or clustered on the filtered column(s). On a plain table, BigQuery still reads every selected column across every row before applying the filter.
+
+**Note on dry run and caching.** A dry run can report `0 B` not because a query is free, but because BigQuery served an identical query from its 24-hour result cache. Disable caching (`Query settings` -> uncheck "Use cached results" in the console, or `bq query --nouse_cache`) to get an honest estimate.
+
+**`dbt build`.** Running `dbt build` executes seeds, models, and tests together in DAG order with fail-fast behavior: if a model fails its tests, dbt skips building anything downstream of it in the same run, rather than building the full DAG first and only surfacing failures at the end.
 
 ## How to run this project
 
@@ -150,9 +182,9 @@ Note that this filter uses `!=`, so rows with a NULL `status_group` are also exc
 - [x] Staging models: customers, orders
 - [x] Seed, ephemeral intermediate model, first mart (`fct_orders`), project variable
 - [ ] Incremental model on BigQuery (requires billing; the incremental pattern was verified separately on a local PostgreSQL instance)
-- [ ] Tests (`not_null`, `unique`, `relationships`) and documentation with lineage
-- [ ] Mart layer: fact and dimension models
-- [ ] Query cost optimization (partitioning and clustering)
+- [x] Tests (`not_null`, `unique`, `relationships`, singular tests) and documentation with lineage
+- [ ] Mart layer: refactor into staging -> intermediate -> mart, 3-layer structure
+- [x] Query cost optimization explored: partitioning and clustering validated in BigQuery, query cost estimation (dry run) measured, `dbt build` adopted; partitioning/clustering not live pending billing (see "BigQuery cost optimization" above)
 
 ## Author
 
