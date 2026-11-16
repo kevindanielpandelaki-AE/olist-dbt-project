@@ -54,4 +54,163 @@ models:
         description: "City for the customer's address."
       - name: customer_state
         description: "State for the customer's address."
-      
+  - name: stg_order_items
+    description: >
+          Staging model for order items from the olist_order_items_dataset source.
+          Grain: 1 row = 1 kombinasi (order_id, order_item_id).
+    columns:
+      - name: order_item_id
+        description: "Unique identifier for each item in an order."
+        tests:
+          - not_null
+      - name: order_id
+        description: "Identifier for the order to which the item belongs."
+        tests:
+          - not_null
+      - name: product_id
+        description: "Identifier for the product being ordered."
+      - name: seller_id
+        description: "Identifier for the seller of the product."
+      - name: price
+        description: "Price per unit of the product."
+      - name: shipping_limit_date
+        description: "The date by which the seller is expected to ship the product."
+      - name: freight_value
+        description: "The cost of shipping the product."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+            - order_id
+            - order_item_id  
+  - name: stg_order_payments
+    description: >
+          Staging model for order payments from the olist_order_payments_dataset source.
+          Grain: 1 row = 1 kombinasi (order_id, payment_sequential).
+    columns:
+      - name: order_id
+        description: "Identifier for the order to which the payment belongs."
+        tests:
+          - not_null
+      - name: payment_sequential
+        description: "Unique identifier for each payment in an order."
+        tests:
+          - not_null
+      - name: payment_type
+        description: "The type of payment used for the order (e.g., credit card, boleto, voucher, etc.)."
+      - name: payment_installments
+        description: "The number of installments for the payment."
+      - name: payment_value
+        description: "The total value of the payment."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+            - order_id
+            - payment_sequential
+  - name: stg_products
+    description: >
+          Staging model for products from the olist_products_dataset source.
+          Grain: 1 row = 1 product_id.
+    columns:
+      - name: product_id
+        description: "Unique identifier for each product."
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name
+        description: "The category name of the product."
+      - name: product_name_lenght
+        description: "The length of the product name."
+      - name: product_description_lenght
+        description: "The length of the product description."
+      - name: product_photos_qty
+        description: "The number of photos associated with the product."
+      - name: product_weight_g
+        description: "The weight of the product in grams."
+      - name: product_length_cm
+        description: "The length of the product in centimeters."
+      - name: product_height_cm
+        description: "The height of the product in centimeters."
+      - name: product_width_cm
+        description: "The width of the product in centimeters."
+  - name: stg_sellers
+    description: >
+          Staging model for sellers from the olist_sellers_dataset source.
+          Grain: 1 row = 1 seller_id.
+    columns:
+      - name: seller_id
+        description: "Unique identifier for each seller."
+        tests:
+          - unique
+          - not_null
+      - name: seller_zip_code_prefix
+        description: "The zip code prefix for the seller's address."
+      - name: seller_city
+        description: "City for the seller's address."
+      - name: seller_state
+        description: "State for the seller's address."
+  - name: stg_geolocation
+    description: >
+          Staging model for geolocations from the olist_geolocation_dataset source.
+          Grain: 1 row = 1 geolocation_zip_code_prefix.
+    columns:
+      - name: geolocation_zip_code_prefix
+        description: "Unique identifier for each geolocation."
+        tests:
+          - not_null
+      - name: geolocation_lat
+        description: "Latitude of the geolocation."
+      - name: geolocation_lng
+        description: "Longitude of the geolocation."
+      - name: geolocation_city
+        description: "City for the geolocation."
+      - name: geolocation_state
+        description: "State for the geolocation."
+  - name: stg_order_reviews
+    description: >
+          Staging model for order reviews from the olist_order_reviews_dataset source.
+          Grain: 1 row = 1 review_id.
+    columns:
+      - name: review_id
+        description: "Unique identifier for each review."
+        tests:
+          - not_null
+      - name: order_id
+        description: "Identifier for the order to which the review belongs."
+      - name: review_score
+        description: "Score given in the review (1 to 5)."
+        tests:
+          - dbt_utils.accepted_range: 
+              arguments:
+                min_value: 1
+                max_value: 5
+      - name: review_comment_title
+        description: "Title of the review comment."
+      - name: review_comment_message
+        description: "Message of the review comment."
+      - name: review_creation_date
+        description: "Date when the review was created."
+      - name: review_answer_timestamp
+        description: "Timestamp when the review was answered."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - review_id
+              - order_id
+  - name: stg_product_category_translation
+    description: >
+          Staging model for product category name translations from the product_category_name_translation source.
+          Grain: 1 row = 1 product_category_name.
+    columns:
+      - name: product_category_name
+        description: "The name of the product category."
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name_english
+        description: "The English translation of the product category name."
+        tests:
+          - not_null
+  

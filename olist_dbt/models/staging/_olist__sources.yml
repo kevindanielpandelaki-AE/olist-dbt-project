@@ -18,3 +18,34 @@ sources:
           freshness:
             warn_after: {count: 90, period: day}
             error_after: {count: 180, period: day}
+      - name: olist_order_items_dataset
+        description: > 
+          One record per item in an order. Each order can have 1 or more items. 
+          The unique identifier per item is order_item_id, which is unique per order_id 
+          (i.e. the same order_id can have multiple order_item_id values).
+      - name: olist_order_payments_dataset
+        description: >
+          One record per payment for an order. Each order can have 1 or more payments. 
+          The unique identifier per payment is payment_sequential, which is unique per order_id 
+          (i.e. the same order_id can have multiple payment_sequential values).
+      - name: olist_products_dataset
+        description: >
+          One record per product. Each product can be sold by 1 or more sellers. 
+          The unique identifier per product is product_id.
+      - name: olist_sellers_dataset
+        description: >
+          One record per seller. Each seller can sell 1 or more products. 
+          The unique identifier per seller is seller_id.
+      - name: olist_geolocation_dataset
+        description: >
+          One record per geolocation. Each geolocation can be associated with 1 or more zip codes. 
+          The unique identifier per geolocation is geolocation_zip_code_prefix.
+      - name: olist_order_reviews_dataset
+        description: >
+          One record per review for an order. Each order can have 0 or 1 reviews. 
+          The unique identifier per review is review_id.
+      - name: product_category_name_translation
+        description: >
+          One record per category name translation. Each category can have 1 or more translations. 
+          The unique identifier per translation is category_name.
+          
