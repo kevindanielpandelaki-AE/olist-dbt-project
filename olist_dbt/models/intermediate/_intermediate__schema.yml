@@ -1,0 +1,44 @@
+models:
+  - name: int_orders_with_status
+    description: >
+      One row per order, enriched with status_group from the order_status_mapping seed.
+      Grain: 1 row = 1 order_id (same grain as stg_orders).
+    columns:
+      - name: order_id
+        description: "Primary key of the order, inherited from stg_orders."
+        tests:
+          - unique
+          - not_null
+      - name: status_group
+        description: "Business-friendly grouping of order_status, mapped via the order_status_mapping seed."
+        tests:
+          - not_null
+
+  - name: int_order_items_aggregated
+    description: >
+      One row per order, aggregated from stg_order_items.
+      Grain: 1 row = 1 order_id.
+    columns:
+      - name: order_id
+        description: "Order identifier, aggregated from stg_order_items."
+        tests:
+          - unique
+          - not_null
+      - name: total_items
+        description: "Number of order item line items in the order."
+      - name: total_price
+        description: "Sum of item prices (excluding freight) for the order."
+      - name: total_freight
+        description: "Sum of freight (shipping) value across items for the order."
+  - name: int_order_payments_aggregated
+    description: >
+      One row per order, aggregated from stg_order_payments.
+      Grain: 1 row = 1 order_id.
+    columns:
+      - name: order_id
+        description: "Order identifier, aggregated from stg_order_payments."
+        tests:
+          - unique
+          - not_null
+      - name: total_payment_value
+        description: "Sum of payment values for the order."
