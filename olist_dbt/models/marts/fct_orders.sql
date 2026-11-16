@@ -29,6 +29,27 @@ available as (
     where status_group != '{{ var("excluded_status_group") }}'
     {% endif %}
 
+),
+
+items as (
+	
+	select * from {{ ref('int_order_items_aggregated') }}
+
+),
+
+payments as (
+
+	select * from {{ ref('int_order_payments_aggregated') }}
+
 )
 
-select * from available
+select available.*,
+	total_items,
+	total_price,
+	total_freight,
+	total_payment_value 
+from available
+left join items
+on available.order_id = items.order_id
+left join payments
+on available.order_id = payments.order_id
