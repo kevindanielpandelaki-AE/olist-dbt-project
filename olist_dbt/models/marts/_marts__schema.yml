@@ -46,5 +46,49 @@ models:
           - accepted_values:
               arguments :
                 values: ['completed', 'in_progress', 'failed']
-      
-               
+      - name: total_items
+        description: "Total number of items in the order, aggregated from stg_order_items."
+      - name: total_price
+        description: "Total price of the order, aggregated from stg_order_items."
+      - name: total_freight
+        description: "Total freight (shipping) cost of the order, aggregated from stg_order_items."
+      - name: total_payment_value
+        description: "Total payment value of the order, aggregated from stg_order_payments."
+  - name: dim_products
+    description: >
+      Dimension model for products from the olist_orders_dataset source.
+      Grain: 1 row = 1 product (product_id is unique).
+      This model is built on top of the stg_products staging model and includes
+      additional business logic and transformations.
+    columns:
+      - name: product_id
+        description: "Natural key for the product from Olist. Primary key of this table — one product, one row."
+        tests:
+          - unique
+          - not_null
+      - name: product_category_name
+        description: "Category name for the product. Can be NULL if the category is unknown."
+        tests:
+          - not_null:
+              config:
+                severity: warn
+      - name: product_category_name_english
+        description: "English translation of the product category name. Can be NULL if the category is unknown."
+        tests:
+          - not_null:
+              config:
+                severity: warn
+      - name: product_name_lenght
+        description: "Length of the product name in characters. Can be NULL if the product name is unknown."
+      - name: product_description_lenght
+        description: "Length of the product description in characters. Can be NULL if the product description is unknown."
+      - name: product_photos_qty
+        description: "Number of photos associated with the product. Can be NULL if the product has no photos."
+      - name: product_weight_g
+        description: "Weight of the product in grams. Can be NULL if the weight is unknown."
+      - name: product_length_cm
+        description: "Length of the product in centimeters. Can be NULL if the length is unknown."
+      - name: product_height_cm
+        description: "Height of the product in centimeters. Can be NULL if the height is unknown."
+      - name: product_width_cm
+        description: "Width of the product in centimeters. Can be NULL if the width is unknown."
